@@ -1,6 +1,6 @@
-# Test, then deploy on every push to main (GitHub Actions).
+# Test and scan, then deploy on every push to main (GitHub Actions).
 #
-# Repo secrets (Settings -> Secrets and variables -> Actions). Kept out of the file because this repo is public:
+# Repo secrets (Settings -> Secrets and variables -> Actions). Kept out of the file, never committed:
 #   DEPLOY_SSH_KEY   private key whose public half is in the server's authorized_keys, locked to deployment/deploy.sh
 #   DEPLOY_HOST      SSH hostname behind Cloudflare Access
 #   DEPLOY_USER      SSH user on the server
@@ -14,12 +14,37 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 1' # weekly Trivy scan: new CVEs show up even when the code does not change (never deploys)
 
 concurrency:
   group: deploy
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
+  # Dependency CVEs (package-lock.json), committed secrets and config issues; HIGH/CRITICAL fail the run.
+  # Trivy is installed from a pinned release with a pinned checksum instead of trivy-action: the action's tags were
+  # hijacked in March 2026, and this workflow holds deploy secrets. The job sees no secrets itself.
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Trivy 0.76.2
+        run: |
+          f=trivy_0.76.2_Linux-64bit.tar.gz
+          curl -fsSL -o "$f" "https://github.com/aquasecurity/trivy/releases/download/v0.76.2/$f"
+          echo "bc0fc726e017b8927a62b2d3531d7a84ee01769daf5c99ed866dced54089fdbf  $f" | sha256sum -c -
+          tar xzf "$f" trivy && sudo mv trivy /usr/local/bin/ && trivy --version
+      - name: Scan
+        run: |
+          trivy fs --quiet --scanners vuln,secret,misconfig --severity HIGH,CRITICAL \
+            --ignore-unfixed --exit-code 1 .
+
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -34,8 +59,8 @@ jobs:
           npm test
 
   deploy:
-    needs: test
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [test, scan]
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
