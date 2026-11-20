@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="14" fill="black"/>
+  <g transform="translate(11 11) scale(0.656)" fill="white" color="white">
+  <path fill-rule="evenodd" d="M9 7h46a6 6 0 0 1 6 6v38a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V13a6 6 0 0 1 6-6Z M10 12h44a2 2 0 0 1 2 2v36a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V14a2 2 0 0 1 2-2Z"/>
+  <path d="M15 22 L23 28 L15 34" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
+  <rect x="27" y="32" width="14" height="4"/>
+  <path d="M30 46 L37 39 L42 43 L47 37 L52 46 Z"/>
+  </g>
+</svg>
