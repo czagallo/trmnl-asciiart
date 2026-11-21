@@ -11,15 +11,25 @@ const { LAYOUT } = require('./gallery');
 const MIN_FONT = 6;
 const CELL_PX = [6.5, 13];
 
+// box.creditRows: rows the artist credit takes from the art when the caption shows it on a line of its own.
 function fits(piece, box) {
   if (!piece || piece.variants || piece.generated) return true;
-  return piece.cols * 0.6 * MIN_FONT <= box.cols * CELL_PX[0] && piece.rows * 1.2 * MIN_FONT <= box.rows * CELL_PX[1];
+  const rows = box.rows - (piece.by ? box.creditRows || 0 : 0);
+  return piece.cols * 0.6 * MIN_FONT <= box.cols * CELL_PX[0] && piece.rows * 1.2 * MIN_FONT <= rows * CELL_PX[1];
 }
+
+// Layouts whose caption puts the credit on a second line on TRMNL OG (src/markup.js), in OG character rows.
+const CREDIT_ROWS = { half_horizontal: { wide: 2 } };
 
 // Every layout and orientation, as [view, orientation, box].
 function boxes() {
   const out = [];
-  for (const [view, b] of Object.entries(LAYOUT.boxes)) for (const [orient, box] of Object.entries(b)) out.push([view, orient, box]);
+  for (const [view, b] of Object.entries(LAYOUT.boxes)) {
+    for (const [orient, box] of Object.entries(b)) {
+      const creditRows = CREDIT_ROWS[view] && CREDIT_ROWS[view][orient];
+      out.push([view, orient, creditRows ? { ...box, creditRows } : box]);
+    }
+  }
   return out;
 }
 

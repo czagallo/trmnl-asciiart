@@ -318,7 +318,7 @@ test('every classic piece renders Liquid-safe in every layout, credited in the c
   for (const p of classic) {
     const out = renderAll({ state: 'ok', piece: p, theme: 'T', msLeft: 5 * MIN, caption: true }, { baseUrl: 'https://x.example' });
     assertSafe(out, p.id);
-    assert.match(out.markup, /class="asc-by"><span class="asc-sep">&nbsp;&middot; <\/span>/);
+    assert.match(out.markup, /class="asc-by">[^<]+<\/span>/);
   }
 });
 
@@ -368,7 +368,7 @@ test('every gallery piece renders Liquid-safe in every layout, with credits in t
   for (const p of gallery) {
     const out = renderAll({ state: 'ok', piece: p, theme: 'T', msLeft: 5 * MIN, caption: true }, { baseUrl: 'https://x.example' });
     assertSafe(out, p.id);
-    assert.match(out.markup, /class="asc-by"><span class="asc-sep">&nbsp;&middot; <\/span>/);
+    assert.match(out.markup, /class="asc-by">[^<]+<\/span>/);
     for (const k of LAYOUT_KEYS) assert.ok((out[k].match(/<svg /g) || []).length <= 2, `${p.id} ${k}`);
   }
 });
@@ -384,6 +384,19 @@ test('views across a day, with and without caption, are Liquid-safe', () => {
       if (caption) assert.match(out.markup, /next in&nbsp;<\/span>\d+m/);
       assert.match(out.markup, />Hall</);
     }
+  }
+});
+
+test('captions stack title and credit and can ellipsize despite the framework label being a flex box', () => {
+  const piece = loadGallery().find((p) => p.by);
+  const out = renderAll({ state: 'ok', piece, theme: 'T', msLeft: 60000, caption: true, fit: {} }, { baseUrl: 'x' });
+  for (const s of Object.values(out)) {
+    // TRMNL's .label is display:flex, where text-overflow does nothing: the title (which carries label classes) and
+    // the credit row must be blocks, or long text is cut mid-letter without an ellipsis.
+    assert.match(s, /\.asc-cap \.asc-title\{display:block;[^}]*text-overflow:ellipsis/);
+    assert.match(s, /\.asc-by\{display:block;[^}]*text-overflow:ellipsis/);
+    assert.match(s, /<span class="asc-title label[^"]*">[^<]+<span class="asc-by">/);
+    assert.doesNotMatch(s, /&middot;/, 'no one-line "title · artist" caption');
   }
 });
 
@@ -504,6 +517,14 @@ test('server: health, markup with defaults and per-user settings, settings page 
     assertSafe(mu, 'user markup');
     assert.match(mu.markup, /Coffee &amp; tea/);
     assert.doesNotMatch(mu.markup.replace(STYLE_RE, ''), /asc-cap/);
+
+    // Uninstall validates the uuid like every other route: junk is acknowledged but deletes nothing.
+    for (const bad of [form({ 'user[uuid]': 'abc 123' }), form({ 'user[uuid][]': 'abc-123' }), form({ uuid: 'x'.repeat(65) })]) {
+      const r = await post('/webhooks/uninstall', bad);
+      assert.equal(r.status, 200);
+      assert.deepEqual(await r.json(), { success: true });
+    }
+    assert.doesNotMatch(await (await fetch(`${base}/manage?uuid=abc-123`)).text(), /name="caption" value="on" checked/);
 
     await post('/webhooks/uninstall', form({ 'user[uuid]': 'abc-123' }));
     const after = await (await fetch(`${base}/manage?uuid=abc-123`)).text();

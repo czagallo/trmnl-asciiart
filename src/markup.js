@@ -25,19 +25,18 @@ const STYLE = `<style>
 .asc-art{flex:1 1 0;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center}
 .asc-art svg{display:block;width:100%;height:100%}
 .asc-art text{font-weight:600}
-.asc-cap{flex:none;display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;min-width:0}
-.asc-cap .asc-title{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.asc-cap{flex:none;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;width:100%;min-width:0}
+.asc-cap .asc-title{display:block;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+/* The credit is a row of its own under the title, never one long "title · artist" line. */
+.asc-by{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .asc-cap .asc-next{flex:none;white-space:nowrap}
 .asc-art .asc-tall{display:none}
 .screen--portrait .asc-art .asc-wide{display:none}
 .screen--portrait .asc-art .asc-tall{display:block}
 .screen--portrait .view--half_vertical .asc-long,.screen--portrait .view--quadrant .asc-long{display:none}
 .view--quadrant .asc-by,.view--half_vertical .asc-by,.screen--portrait .view--half_horizontal .asc-by{display:none}
-/* TRMNL X quadrant: room for the credit, on a line of its own so long credits stay readable. */
-.screen--lg .view--quadrant .asc-by{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.screen--lg .view--quadrant .asc-sep{display:none}
-.screen--lg .view--quadrant .asc-title{display:block}
-.screen--lg .view--quadrant .asc-cap{align-items:flex-end}
+/* TRMNL X quadrant: room for the credit, which OG has not. */
+.screen--lg .view--quadrant .asc-by{display:block}
 .asc-o-tall{display:none !important}
 .screen--portrait .asc-o-wide{display:none !important}
 .screen--portrait .asc-o-tall{display:flex !important}
@@ -110,7 +109,7 @@ function caption(v, size, piece = v.piece) {
   const cls = size === 'small' ? 'label label--small lg:label--large' : 'label lg:label--large lg:portrait:label--xlarge';
   // Narrow portrait boxes drop "next in" (CSS) so the title keeps its room.
   const next = `<span class="asc-long">next in&nbsp;</span>${minutesLeft(v.msLeft)}m`;
-  const by = piece.by ? `<span class="asc-by"><span class="asc-sep">&nbsp;&middot; </span>${esc(piece.by)}</span>` : '';
+  const by = piece.by ? `<span class="asc-by">${esc(piece.by)}</span>` : '';
   return `<div class="asc-cap">
 <span class="asc-title ${cls}">${esc(piece.title)}${by}</span>
 <span class="asc-next ${cls}">${next}</span>
