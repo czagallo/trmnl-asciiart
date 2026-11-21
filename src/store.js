@@ -1,5 +1,5 @@
-// Per-user settings (leaderboard, AoC session cookie, ...), persisted to a JSON file readable by the owner only.
-// The session cookie is a credential: it is never logged, never sent back to the browser and deleted on uninstall.
+// Per-user settings (themes, collections, seasons, caption), persisted to a JSON file readable by the owner only.
+// Settings are deleted on uninstall.
 
 const fs = require('fs');
 const path = require('path');

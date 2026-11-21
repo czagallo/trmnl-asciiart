@@ -76,7 +76,8 @@ app.post('/webhooks/install-success', (req, res) => {
 });
 
 app.post('/webhooks/uninstall', (req, res) => {
-  const uuid = req.body?.user?.uuid || req.body?.uuid;
+  const raw = req.body?.user?.uuid || req.body?.uuid;
+  const uuid = typeof raw === 'string' && UUID_RE.test(raw) ? raw : null;
   if (uuid) store.delete(uuid);
   console.log(uuid ? 'Uninstall' : 'Uninstall without a user');
   res.json({ success: true });
