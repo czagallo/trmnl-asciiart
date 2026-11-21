@@ -1,0 +1,48 @@
+{
+  "comment": "Gallery sizing, shared by scripts/gallery/build.py and src/gallery/index.js. boxes: the art box of each layout in character cells on a TRMNL OG (about 6.5 x 13 px per cell), for landscape (wide) and portrait (tall) screens. widths: the ladder of widths pieces are converted at; a layout shows the widest one that fits its box.",
+  "widths": [
+    28,
+    34,
+    40,
+    48,
+    56,
+    66,
+    78,
+    92,
+    108
+  ],
+  "boxes": {
+    "full": {
+      "wide": { "cols": 120,
+        "rows": 29
+      },
+      "tall": { "cols": 70,
+        "rows": 53
+      }
+    },
+    "half_horizontal": {
+      "wide": { "cols": 120,
+        "rows": 12
+      },
+      "tall": { "cols": 70,
+        "rows": 25
+      }
+    },
+    "half_vertical": {
+      "wide": { "cols": 58,
+        "rows": 29
+      },
+      "tall": { "cols": 31,
+        "rows": 53
+      }
+    },
+    "quadrant": {
+      "wide": { "cols": 58,
+        "rows": 12
+      },
+      "tall": { "cols": 31,
+        "rows": 25
+      }
+    }
+  }
+}

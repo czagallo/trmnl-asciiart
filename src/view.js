@@ -2,6 +2,19 @@
 
 const { pieceAt, normalizeSettings } = require('./schedule');
 const { THEMES, SEASONAL } = require('./art');
+const { fits, boxes } = require('./fit');
+
+// Layouts too small for a piece show another one that fits them, per orientation: nextFitting(ok) supplies it
+// (in the plugin, the next piece of the rotation that passes ok). Returns { view: { wide?, tall? } }.
+function fitFor(piece, nextFitting) {
+  const fit = {};
+  for (const [view, orient, box] of boxes()) {
+    if (fits(piece, box)) continue;
+    const alt = nextFitting((p) => fits(p, box));
+    if (alt) (fit[view] = fit[view] || {})[orient] = alt;
+  }
+  return fit;
+}
 
 function themeLabel(theme) {
   return THEMES[theme] || SEASONAL[theme] || theme;
@@ -13,6 +26,7 @@ function buildView(settings, { now = Date.now(), timeZone, pieces } = {}) {
   try {
     const r = pieces ? pieceAt(s, { now, timeZone }, pieces) : pieceAt(s, { now, timeZone });
     if (!r.piece || !r.piece.lines || r.piece.rows === 0) return { state: 'error', error: 'empty' };
+    const fit = fitFor(r.piece, r.nextFitting);
     return {
       state: 'ok',
       piece: r.piece,
@@ -23,6 +37,7 @@ function buildView(settings, { now = Date.now(), timeZone, pieces } = {}) {
       caption: s.caption,
       fallback: r.fallback,
       playlistSize: r.playlistSize,
+      fit,
     };
   } catch (err) {
     console.error('Could not pick a piece:', err.message);
@@ -30,4 +45,4 @@ function buildView(settings, { now = Date.now(), timeZone, pieces } = {}) {
   }
 }
 
-module.exports = { buildView, themeLabel };
+module.exports = { buildView, themeLabel, fitFor };

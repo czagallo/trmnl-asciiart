@@ -6,6 +6,8 @@
 // The shuffle is repaired so the same piece never shows twice in a row, also across the boundary between two cycles.
 
 const { loadCollection, THEMES, SEASONAL } = require('./art');
+const { loadGallery } = require('./gallery');
+const { loadClassic } = require('./classic');
 const { GENERATORS, generatePiece, rng } = require('./generate');
 
 const SLOT_MS = 15 * 60 * 1000;
@@ -56,7 +58,17 @@ function inSeason(theme, { month, southern }) {
 // ---------------------------------------------------------------------------
 
 const FILTER_KEYS = [...Object.keys(THEMES), 'seasonal'];
-const DEFAULTS = Object.freeze({ themes: null, seasonal: true, caption: true });
+// classic: hand-drawn pieces by ASCII artists (asciiart.eu); gallery: public-domain artworks converted to ASCII;
+// sketches: the pieces made for this plugin, plus the generators. Any mix can be picked; null means all of them.
+const COLLECTIONS = ['classic', 'gallery', 'sketches'];
+const DEFAULTS = Object.freeze({ themes: null, seasonal: true, caption: true, collections: null });
+
+// Every piece the plugin knows.
+function allPieces() {
+  return [...loadClassic(), ...loadGallery(), ...loadCollection()];
+}
+
+const collectionOf = (p) => p.collection || 'sketches';
 
 // Turns whatever was stored (or nothing) into complete settings. themes: null = everything.
 function normalizeSettings(s) {
@@ -68,6 +80,14 @@ function normalizeSettings(s) {
   }
   if (typeof s.seasonal === 'boolean') out.seasonal = s.seasonal;
   if (typeof s.caption === 'boolean') out.caption = s.caption;
+  // Older settings stored one choice: "gallery", "sketches" or "both".
+  const picked = Array.isArray(s.collections)
+    ? s.collections
+    : { gallery: ['gallery'], sketches: ['sketches'], both: ['gallery', 'sketches'] }[s.collection];
+  if (picked) {
+    const c = COLLECTIONS.filter((k) => picked.includes(k));
+    out.collections = c.length === 0 || c.length === COLLECTIONS.length ? null : c;
+  }
   return out;
 }
 
@@ -86,11 +106,13 @@ function hash(str) {
 
 // Ids of every eligible piece, in-season seasonal pieces SEASON_WEIGHT times. Sorted, so the result depends only on
 // the collection and the settings, not on file order.
-function playlist(settings, cal, pieces = loadCollection()) {
+function playlist(settings, cal, pieces = allPieces()) {
   const s = normalizeSettings(settings);
   const wanted = (k) => !s.themes || s.themes.includes(k);
+  const inCollection = (c) => !s.collections || s.collections.includes(c);
   const ids = [];
   for (const p of pieces) {
+    if (!inCollection(collectionOf(p))) continue;
     if (THEMES[p.theme]) {
       if (wanted(p.theme)) ids.push(p.id);
     } else if (SEASONAL[p.theme] && wanted('seasonal')) {
@@ -98,8 +120,8 @@ function playlist(settings, cal, pieces = loadCollection()) {
       else if (inSeason(p.theme, cal)) for (let i = 0; i < SEASON_WEIGHT; i++) ids.push(p.id);
     }
   }
-  for (const g of GENERATORS) if (wanted(g.theme)) ids.push(g.id);
-  if (ids.length === 0) {
+  if (inCollection('sketches')) for (const g of GENERATORS) if (wanted(g.theme)) ids.push(g.id);
+  if (ids.length === 0 && s.themes) {
     // e.g. only "seasonal" picked and nothing is in season: show the year-round collection rather than nothing.
     return { ids: playlist({ ...s, themes: null }, cal, pieces).ids.filter((id) => !isSeasonalId(id, pieces)), fallback: true };
   }
@@ -173,22 +195,36 @@ function pickId(ids, slot) {
 }
 
 // The piece for a moment in time. Generated pieces are drawn from the slot number.
-function pieceAt(settings, { now = Date.now(), timeZone } = {}, pieces = loadCollection()) {
+// Also returns nextFitting(ok): the first piece from this slot on that passes ok(), for layouts too small for the
+// slot's own piece. It walks the same rotation forward, so it is deterministic too.
+function pieceAt(settings, { now = Date.now(), timeZone } = {}, pieces = allPieces()) {
   const slot = slotOf(now);
   const d = localDate(now, timeZone);
   const cal = { month: d.month, southern: isSouthern(timeZone) };
   const { ids, fallback } = playlist(settings, cal, pieces);
-  const id = pickId(ids, slot);
-  const gen = GENERATORS.find((g) => g.id === id);
-  const piece = gen ? generatePiece(gen, slot) : pieces.find((p) => p.id === id);
-  return { piece, slot, nextAt: slotEnd(slot), playlistSize: ids.length, fallback };
+  if (ids.length === 0) return { piece: null, slot, nextAt: slotEnd(slot), playlistSize: 0, fallback, nextFitting: () => null };
+  const resolve = (id) => {
+    const gen = GENERATORS.find((g) => g.id === id);
+    return gen ? generatePiece(gen, slot) : pieces.find((p) => p.id === id);
+  };
+  const piece = resolve(pickId(ids, slot));
+  const nextFitting = (ok) => {
+    for (let k = 0; k < ids.length + 1; k++) {
+      const p = k === 0 ? piece : resolve(pickId(ids, slot + k));
+      if (p && ok(p)) return p;
+    }
+    return null;
+  };
+  return { piece, slot, nextAt: slotEnd(slot), playlistSize: ids.length, fallback, nextFitting };
 }
 
 module.exports = {
   SLOT_MS,
   SEASON_WEIGHT,
   FILTER_KEYS,
+  COLLECTIONS,
   DEFAULTS,
+  allPieces,
   slotOf,
   slotEnd,
   localDate,

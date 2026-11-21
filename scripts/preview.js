@@ -4,16 +4,20 @@
 //   node scripts/preview.js [outDir]              the piece of the current 15-minute slot
 //   node scripts/preview.js --slot=N              the piece of slot N (any integer; try a few)
 //   node scripts/preview.js --piece=espresso,...  specific pieces by id (gen-ridgeline etc. for generated ones)
-//   node scripts/preview.js --set=sizes           smallest, widest, tallest, largest and a generated piece
-//   node scripts/preview.js --sheet               one contact sheet with every piece (for reviewing the collection)
+//   node scripts/preview.js --set=sizes           smallest, widest, tallest, largest sketch, generated pieces, and the
+//                                                 most landscape and most portrait gallery pieces
+//   node scripts/preview.js --sheet               contact sheets with every piece (for reviewing the collection);
+//                                                 --collection=classic, =gallery or =sketches to sheet one
 //   add --check to also measure every page in Chrome and report clipping, overflow and tiny text (exit 1 on problems)
 //   add --tz=Area/City to pick the time zone (seasons), --date=2026-12-10 to pretend another day
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { buildView, themeLabel } = require('../src/view');
+const { buildView, themeLabel, fitFor } = require('../src/view');
 const { renderAll, artSvg, esc } = require('../src/markup');
 const { loadCollection } = require('../src/art');
+const { loadGallery } = require('../src/gallery');
+const { loadClassic } = require('../src/classic');
 const { GENERATORS, generatePiece } = require('../src/generate');
 const { slotOf, SLOT_MS } = require('../src/schedule');
 
@@ -38,11 +42,13 @@ window.addEventListener('load', () => setTimeout(() => {
   document.querySelectorAll('.view').forEach((v, i) => {
     const r = (el) => el.getBoundingClientRect();
     const vr = r(v);
+    // Only what is shown: a layout may carry a landscape and a portrait block, one of them hidden.
+    const vis = (sel) => [...v.querySelectorAll(sel)].find((el) => el.getBoundingClientRect().width > 0);
     const svg = [...v.querySelectorAll('.asc-art svg')].find((el) => el.getBoundingClientRect().width > 0);
     const res = { i, problems: [] };
     const inside = (a, b, tol) => a.left >= b.left - tol && a.top >= b.top - tol && a.right <= b.right + tol && a.bottom <= b.bottom + tol;
     if (svg) {
-      const box = r(v.querySelector('.asc-art'));
+      const box = r(svg.closest('.asc-art'));
       const vb = svg.viewBox.baseVal;
       const sr = r(svg);
       const scale = Math.min(sr.width / vb.width, sr.height / vb.height);
@@ -58,13 +64,13 @@ window.addEventListener('load', () => setTimeout(() => {
       if (box.height < 20 || box.width < 20) res.problems.push('art box collapsed');
       res.fill = u ? [+((u.right - u.left) / box.width).toFixed(2), +((u.bottom - u.top) / box.height).toFixed(2)] : null;
     }
-    const cap = v.querySelector('.asc-cap');
+    const cap = vis('.asc-cap');
     if (cap && !inside(r(cap), vr, 0.5)) res.problems.push('caption outside the view');
-    const next = v.querySelector('.asc-next');
+    const next = vis('.asc-next');
     if (next && !inside(r(next), vr, 0.5)) res.problems.push('countdown clipped');
-    const title = v.querySelector('.asc-title');
+    const title = vis('.asc-title');
     if (title && title.scrollWidth > title.clientWidth + 1) res.problems.push('title truncated');
-    const lay = v.querySelector('.layout');
+    const lay = vis('.layout');
     if (lay && lay.scrollHeight > lay.clientHeight + 1) res.problems.push('layout overflows vertically');
     out.push(res);
   });
@@ -97,9 +103,12 @@ function chrome(argv, retry = true) {
   }
 }
 
+// Small layouts swap a too-big piece for one that fits (as /markup does): here, the first fitting classic piece.
 function viewFor(piece, now) {
   const nextAt = (slotOf(now) + 1) * SLOT_MS;
-  return { state: 'ok', piece, theme: themeLabel(piece.theme), msLeft: nextAt - now, nextAt, caption: !flag('no-caption') };
+  const pool = loadClassic();
+  const fit = fitFor(piece, (ok) => (ok(piece) ? piece : pool.find(ok)));
+  return { state: 'ok', piece, theme: themeLabel(piece.theme), msLeft: nextAt - now, nextAt, caption: !flag('no-caption'), fit };
 }
 
 function sheet(pieces, perPage = 12) {
@@ -150,7 +159,9 @@ function renderSet(name, v) {
           else {
             const first = report[0] || {};
             const bad = report.flatMap((r) => r.problems);
-            const tiny = first.fontPx !== undefined && first.fontPx < (s.name === 'trmnl-x-lg' ? 9 : 6);
+            // Gallery drawings are texture rather than text, and their width is picked per box: they may go smaller.
+            const min = (s.name === 'trmnl-x-lg' ? 9 : 6) - (v.piece && v.piece.variants ? 2 : 0);
+            const tiny = first.fontPx !== undefined && first.fontPx < min;
             console.log(`  ${file.padEnd(52)} font ${String(first.fontPx).padStart(5)}px  box ${first.box}  fill ${first.fill}${bad.length ? '  ' + bad.join(', ') : ''}${tiny ? '  TINY' : ''}`);
             if (bad.length) problems.push(`${file}: ${[...new Set(bad)].join(', ')}`);
             if (tiny) problems.push(`${file}: text only ${first.fontPx}px`);
@@ -165,12 +176,17 @@ function renderSet(name, v) {
 
 function main() {
   const now = opt('date') ? new Date(`${opt('date')}T12:07:00Z`).getTime() : Date.now();
-  const all = loadCollection();
+  const sketches = loadCollection();
+  const gallery = loadGallery();
+  const classic = loadClassic();
+  const all = [...classic, ...sketches, ...gallery];
   const generated = (id, seed) => generatePiece(GENERATORS.find((g) => g.id === id), seed);
 
   if (flag('sheet')) {
     const seeds = [1, 2, 3];
-    return sheet([...all, ...GENERATORS.flatMap((g) => seeds.map((s) => generatePiece(g, slotOf(now) + s)))]);
+    const gen = GENERATORS.flatMap((g) => seeds.map((s) => generatePiece(g, slotOf(now) + s)));
+    const which = opt('collection');
+    return sheet(which === 'gallery' ? gallery : which === 'classic' ? classic : which === 'sketches' ? [...sketches, ...gen] : [...all, ...gen]);
   }
 
   fs.mkdirSync(outDir, { recursive: true });
@@ -182,12 +198,17 @@ function main() {
       sets.push([id, viewFor(p, now)]);
     }
   } else if (opt('set') === 'sizes') {
-    const by = (f) => all.slice().sort((a, b) => f(a) - f(b))[0];
+    const by = (f, list = sketches) => list.slice().sort((a, b) => f(a) - f(b))[0];
     const picks = {
       smallest: by((p) => p.cols * p.rows),
       widest: by((p) => -p.cols),
       tallest: by((p) => -p.rows / p.cols),
       largest: by((p) => -p.cols * p.rows),
+      'gallery-wide': by((p) => p.rows / p.cols, gallery),
+      'gallery-tall': by((p) => -p.rows / p.cols, gallery),
+      'classic-largest': by((p) => -p.cols * p.rows, classic),
+      'classic-tallest': by((p) => -p.rows / p.cols, classic),
+      'classic-widest': by((p) => -p.cols, classic),
     };
     for (const [k, p] of Object.entries(picks)) sets.push([`${k}-${p.id}`, viewFor(p, now)]);
     sets.push(['generated-gen-interference', viewFor(generated('gen-interference', slotOf(now)), now)]);

@@ -1,0 +1,602 @@
+[
+ {
+  "id": "great-wave",
+  "title": "The Great Wave",
+  "theme": "sea",
+  "artist": "Katsushika Hokusai",
+  "year": "c. 1831",
+  "file": "File:Tsunami by hokusai 19th century.jpg"
+ },
+ {
+  "id": "jellyfish",
+  "title": "Discomedusae",
+  "theme": "sea",
+  "artist": "Ernst Haeckel",
+  "year": "1904",
+  "file": "File:Haeckel Discomedusae 8.jpg"
+ },
+ {
+  "id": "naruto",
+  "title": "Naruto Whirlpools",
+  "theme": "sea",
+  "artist": "Utagawa Hiroshige",
+  "year": "1855",
+  "file": "File:Utagawa Hiroshige Awa Province- Naruto Whirlpools (Awa, Naruto no fuha).jpeg"
+ },
+ {
+  "id": "mariner",
+  "title": "The Albatross",
+  "theme": "sea",
+  "artist": "Gustave Doré",
+  "year": "1876",
+  "file": "File:Rime of the Ancient Mariner-Albatross-Dore.jpg"
+ },
+ {
+  "id": "anemones",
+  "title": "Sea Anemones",
+  "theme": "sea",
+  "artist": "Ernst Haeckel",
+  "year": "1904",
+  "file": "File:Haeckel Actiniae.jpg"
+ },
+ {
+  "id": "fishing-boats",
+  "title": "Fishing Boats at Saintes-Maries",
+  "theme": "sea",
+  "artist": "Vincent van Gogh",
+  "year": "1888",
+  "file": "File:Vincent van Gogh - Boats at Saintes-Marie watercolour.jpg"
+ },
+ {
+  "id": "lighthouse",
+  "title": "Eddystone Lighthouse",
+  "theme": "sea",
+  "artist": "Henry Winstanley",
+  "year": "c. 1700",
+  "file": "File:Hamlet Winstanley - Eddystone Lighthouse - B1977.14.14578 - Yale Center for British Art.jpg"
+ },
+ {
+  "id": "rhinoceros",
+  "title": "Rhinoceros",
+  "theme": "animals",
+  "artist": "Albrecht Dürer",
+  "year": "1515",
+  "file": "File:The Rhinoceros (NGA 1964.8.697) enhanced.png"
+ },
+ {
+  "id": "hare",
+  "title": "Young Hare",
+  "theme": "animals",
+  "artist": "Albrecht Dürer",
+  "year": "1502",
+  "file": "File:Albrecht Dürer - Hare, 1502 - Google Art Project.jpg"
+ },
+ {
+  "id": "owl",
+  "title": "Barred Owl",
+  "theme": "animals",
+  "artist": "John James Audubon",
+  "year": "1827-38",
+  "file": "File:Barred Owl (Audubon).jpg"
+ },
+ {
+  "id": "flamingo",
+  "title": "American Flamingo",
+  "theme": "animals",
+  "artist": "John James Audubon",
+  "year": "1838",
+  "file": "File:431 American Flamingo.jpg"
+ },
+ {
+  "id": "chat-noir",
+  "title": "Le Chat Noir",
+  "theme": "animals",
+  "artist": "Théophile Steinlen",
+  "year": "1896",
+  "file": "File:Théophile-Alexandre Steinlen - Tournée du Chat Noir de Rodolphe Salis (Tour of Rodolphe Salis' Chat Noir) - Google Art Project.jpg"
+ },
+ {
+  "id": "roosters",
+  "title": "Rooster",
+  "theme": "animals",
+  "artist": "Itō Jakuchū",
+  "year": "18th c.",
+  "file": "File:Itō Jakuchū 伊藤若冲 - Rooster - 1964.164 - Arthur M. Sackler Museum.jpg"
+ },
+ {
+  "id": "bats",
+  "title": "Chiroptera",
+  "theme": "animals",
+  "artist": "Ernst Haeckel",
+  "year": "1904",
+  "file": "File:Haeckel Chiroptera tags added.jpg"
+ },
+ {
+  "id": "hummingbirds",
+  "title": "Hummingbirds",
+  "theme": "animals",
+  "artist": "Ernst Haeckel",
+  "year": "1904",
+  "file": "File:Haeckel Trochilidae.jpg"
+ },
+ {
+  "id": "stag-beetle",
+  "title": "Stag Beetle",
+  "theme": "animals",
+  "artist": "Albrecht Dürer",
+  "year": "1505",
+  "file": "File:Albrecht Dürer - Hirschkäfer (1505).jpg"
+ },
+ {
+  "id": "turf",
+  "title": "The Large Piece of Turf",
+  "theme": "nature",
+  "artist": "Albrecht Dürer",
+  "year": "1503",
+  "file": "File:Albrecht Dürer - The Large Piece of Turf, 1503 - Google Art Project.jpg"
+ },
+ {
+  "id": "ferns",
+  "title": "Ferns",
+  "theme": "nature",
+  "artist": "Ernst Haeckel",
+  "year": "1904",
+  "file": "File:Haeckel Filicinae 92.jpg"
+ },
+ {
+  "id": "rose",
+  "title": "Rosa Centifolia",
+  "theme": "nature",
+  "artist": "Pierre-Joseph Redouté",
+  "year": "1817-24",
+  "file": "File:Henry Joseph Redouté - Rosa Centifolia Anglica Rubra - 1943.137 - Cleveland Museum of Art.tif"
+ },
+ {
+  "id": "cypresses",
+  "title": "Wheat Field with Cypresses",
+  "theme": "nature",
+  "artist": "Vincent van Gogh",
+  "year": "1889",
+  "file": "File:Vincent van Gogh - Green Wheat Field with Cypress (1889).jpg"
+ },
+ {
+  "id": "iris",
+  "title": "Irises",
+  "theme": "nature",
+  "artist": "Vincent van Gogh",
+  "year": "1889",
+  "file": "File:Vincent van Gogh - Irises (1889).jpg"
+ },
+ {
+  "id": "red-fuji",
+  "title": "Red Fuji",
+  "theme": "mountains",
+  "artist": "Katsushika Hokusai",
+  "year": "c. 1831",
+  "file": "File:Red Fuji southern wind clear morning.jpg"
+ },
+ {
+  "id": "kajikazawa",
+  "title": "Kajikazawa",
+  "theme": "mountains",
+  "artist": "Katsushika Hokusai",
+  "year": "c. 1831",
+  "file": "File:Kajikazawa in Kai province.jpg"
+ },
+ {
+  "id": "wanderer",
+  "title": "Wanderer above the Sea of Fog",
+  "theme": "mountains",
+  "artist": "Caspar David Friedrich",
+  "year": "c. 1818",
+  "file": "File:Caspar David Friedrich - Wanderer above the sea of fog.jpg"
+ },
+ {
+  "id": "jungfrau",
+  "title": "Eiger, Mönch and Jungfrau",
+  "theme": "mountains",
+  "artist": "Ferdinand Hodler",
+  "year": "1908",
+  "file": "File:Hodler - Eiger, Mönch und Jungfrau im Mondschein - 1908.jpeg"
+ },
+ {
+  "id": "rainstorm",
+  "title": "Rainstorm Beneath the Summit",
+  "theme": "mountains",
+  "artist": "Katsushika Hokusai",
+  "year": "c. 1831",
+  "file": "File:Rainstorm Beneath the Summit by Hokusai (Shimane Art Museum).jpg"
+ },
+ {
+  "id": "earthrise",
+  "title": "Earthrise",
+  "theme": "space",
+  "artist": "NASA, Bill Anders",
+  "year": "1968",
+  "file": "File:NASA-Apollo8-Dec24-Earthrise.jpg"
+ },
+ {
+  "id": "moon",
+  "title": "The Moon",
+  "theme": "space",
+  "artist": "Lick Observatory",
+  "year": "c. 1890",
+  "file": "File:EB1911 - Moon - Photo.jpg"
+ },
+ {
+  "id": "saturn",
+  "title": "Saturn",
+  "theme": "space",
+  "artist": "Étienne Léopold Trouvelot",
+  "year": "1874",
+  "file": "File:Étienne Léopold Trouvelot, “The Planet Saturn, from The Trouvelot Astronomical Drawings” 2006 48 10v1.jpg"
+ },
+ {
+  "id": "comet",
+  "title": "The Great Comet of 1881",
+  "theme": "space",
+  "artist": "Étienne Léopold Trouvelot",
+  "year": "1881",
+  "file": "File:Trouvelot - The great comet of 1881 - edit 1.jpg"
+ },
+ {
+  "id": "flammarion",
+  "title": "The Flammarion Engraving",
+  "theme": "space",
+  "artist": "anonymous, in Flammarion",
+  "year": "1888",
+  "file": "File:FlammarionWoodcut.jpg"
+ },
+ {
+  "id": "pillars",
+  "title": "Pillars of Creation",
+  "theme": "space",
+  "artist": "NASA, ESA, Hubble",
+  "year": "2014",
+  "file": "File:Pillars of creation 2014 HST WFC3-UVIS full-res denoised.jpg"
+ },
+ {
+  "id": "blue-marble",
+  "title": "The Blue Marble",
+  "theme": "space",
+  "artist": "NASA, Apollo 17",
+  "year": "1972",
+  "file": "File:The Earth seen from Apollo 17.jpg"
+ },
+ {
+  "id": "aurora",
+  "title": "Aurora Borealis",
+  "theme": "space",
+  "artist": "Étienne Léopold Trouvelot",
+  "year": "1872",
+  "file": "File:Étienne Léopold Trouvelot, “Aurora Borealis, from The Trouvelot Astronomical Drawings” 2006 48 4v1.jpg"
+ },
+ {
+  "id": "colosseum",
+  "title": "The Colosseum",
+  "theme": "city",
+  "artist": "Giovanni Battista Piranesi",
+  "year": "1757",
+  "file": "File:Giovanni Battista Piranesi, The Colosseum.png"
+ },
+ {
+  "id": "over-london",
+  "title": "Over London by Rail",
+  "theme": "city",
+  "artist": "Gustave Doré",
+  "year": "1872",
+  "file": "File:Dore London.jpg"
+ },
+ {
+  "id": "shower",
+  "title": "Sudden Shower over Shin-Ōhashi",
+  "theme": "city",
+  "artist": "Utagawa Hiroshige",
+  "year": "1857",
+  "file": "File:Hiroshige, Sudden shower over Shin-Ōhashi bridge and Atake, 1857.jpg"
+ },
+ {
+  "id": "flatiron",
+  "title": "The Flatiron",
+  "theme": "city",
+  "artist": "Alfred Stieglitz",
+  "year": "1903",
+  "file": "File:Alfred Stieglitz - The Flatiron Building - Google Art Project.jpg"
+ },
+ {
+  "id": "brooklyn",
+  "title": "Brooklyn Bridge",
+  "theme": "city",
+  "artist": "Currier & Ives",
+  "year": "1883",
+  "file": "File:Currier & Ives Brooklyn2.jpg"
+ },
+ {
+  "id": "eiffel",
+  "title": "Eiffel Tower under Construction",
+  "theme": "city",
+  "artist": "Louis-Émile Durandelle",
+  "year": "1888",
+  "file": "File:Louis-Emile Durandelle, The Eiffel Tower - State of the Construction, 1888.jpg"
+ },
+ {
+  "id": "nihonbashi",
+  "title": "Nihonbashi",
+  "theme": "city",
+  "artist": "Utagawa Hiroshige",
+  "year": "1833",
+  "file": "File:東海道五十三次之内 日本橋 朝之景-Stations One- Morning View of Nihonbashi MET DP122174.jpg"
+ },
+ {
+  "id": "coffea",
+  "title": "Coffea Arabica",
+  "theme": "coffee",
+  "artist": "Franz Eugen Köhler",
+  "year": "1887",
+  "file": "File:Coffea arabica - Köhler–s Medizinal-Pflanzen-189 (cropped).jpg"
+ },
+ {
+  "id": "chocolate-girl",
+  "title": "The Chocolate Girl",
+  "theme": "coffee",
+  "artist": "Jean-Étienne Liotard",
+  "year": "1745",
+  "file": "File:Jean-Etienne Liotard - The Chocolate Girl - Google Art Project.jpg"
+ },
+ {
+  "id": "coffee-pot",
+  "title": "Still Life with Coffee Pot",
+  "theme": "coffee",
+  "artist": "Vincent van Gogh",
+  "year": "1888",
+  "file": "File:Van Gogh - Stillleben mit Kaffeekanne, Geschirr und Früchten.jpeg"
+ },
+ {
+  "id": "coffeehouse",
+  "title": "A London Coffee House",
+  "theme": "coffee",
+  "artist": "anonymous",
+  "year": "17th c.",
+  "file": "File:Interior of a London Coffee-house, 17th century.JPG"
+ },
+ {
+  "id": "tea-party",
+  "title": "Tea Time",
+  "theme": "coffee",
+  "artist": "Mary Cassatt",
+  "year": "1880",
+  "file": "File:Mary Cassatt - The Tea - MFA Boston 42.178.jpg"
+ },
+ {
+  "id": "phonograph",
+  "title": "Phonograph",
+  "theme": "tech",
+  "artist": "Levin C. Handy",
+  "year": "1878",
+  "file": "File:Edison and phonograph edit2.jpg"
+ },
+ {
+  "id": "telephone",
+  "title": "Telephone",
+  "theme": "tech",
+  "artist": "Alexander Graham Bell",
+  "year": "1876",
+  "file": "File:Alexander Graham Bell's Telephone Patent Drawing and Oath - NARA - 302052 (page 2).jpg"
+ },
+ {
+  "id": "radiolaria",
+  "title": "Discoidea",
+  "theme": "abstract",
+  "artist": "Ernst Haeckel",
+  "year": "1904",
+  "file": "File:Haeckel Discoidea.jpg"
+ },
+ {
+  "id": "stephoidea",
+  "title": "Stephoidea",
+  "theme": "abstract",
+  "artist": "Ernst Haeckel",
+  "year": "1904",
+  "file": "File:Haeckel Stephoidea edit.jpg"
+ },
+ {
+  "id": "diatoms",
+  "title": "Diatomea",
+  "theme": "abstract",
+  "artist": "Ernst Haeckel",
+  "year": "1904",
+  "file": "File:Haeckel Diatomea 4.jpg"
+ },
+ {
+  "id": "ornament",
+  "title": "Moresque Ornament",
+  "theme": "abstract",
+  "artist": "Owen Jones",
+  "year": "1856",
+  "file": "File:Owen Jones - Grammar of Ornament - 1868 - plate 043 - 300ppi.jpg"
+ },
+ {
+  "id": "carceri",
+  "title": "The Drawbridge",
+  "theme": "abstract",
+  "artist": "Giovanni Battista Piranesi",
+  "year": "1761",
+  "file": "File:Giovanni Battista Piranesi - The Drawbridge - Google Art Project.jpg"
+ },
+ {
+  "id": "mondrian",
+  "title": "Composition",
+  "theme": "abstract",
+  "artist": "Piet Mondrian",
+  "year": "1930",
+  "file": "File:Piet Mondriaan, 1930 - Mondrian Composition II in Red, Blue, and Yellow.jpg"
+ },
+ {
+  "id": "hunters",
+  "title": "Hunters in the Snow",
+  "theme": "winter",
+  "artist": "Pieter Bruegel the Elder",
+  "year": "1565",
+  "file": "File:Pieter Bruegel the Elder - Hunters in the Snow (Winter) - Google Art Project.jpg"
+ },
+ {
+  "id": "kambara",
+  "title": "Night Snow at Kambara",
+  "theme": "winter",
+  "artist": "Utagawa Hiroshige",
+  "year": "1833",
+  "file": "File:Night Snow at Kambara (Kambara Yoru no Yuki), Station 15, from the Fifty-Three Stations of the Tokaido (Tokaido Gojusantsugi no Uchi) (Hoeido), by Utagawa (Andō) Hiroshige, 1832-1834, Hood Museum - PR.972.63.16.tif"
+ },
+ {
+  "id": "winter-friedrich",
+  "title": "Winter Landscape with Church",
+  "theme": "winter",
+  "artist": "Christian David Gebauer",
+  "year": "",
+  "file": "File:Winter Landscape with Brabrand Church.jpg"
+ },
+ {
+  "id": "santa",
+  "title": "Merry Old Santa Claus",
+  "theme": "christmas",
+  "artist": "Thomas Nast",
+  "year": "1881",
+  "file": "File:Merry Old Santa Claus by Thomas Nast.jpg"
+ },
+ {
+  "id": "xmas-tree",
+  "title": "The Christmas Tree",
+  "theme": "christmas",
+  "artist": "Joseph Lionel Williams",
+  "year": "1848",
+  "file": "File:The Christmas Tree at Windsor Castle, by J. L. Williams - ILN 1848 (cropped).jpg"
+ },
+ {
+  "id": "almond",
+  "title": "Almond Blossom",
+  "theme": "spring",
+  "artist": "Vincent van Gogh",
+  "year": "1890",
+  "file": "File:Vincent van Gogh - Almond blossom - Google Art Project.jpg"
+ },
+ {
+  "id": "plum-garden",
+  "title": "Plum Garden at Kameido",
+  "theme": "spring",
+  "artist": "Utagawa Hiroshige",
+  "year": "1857",
+  "file": "File:Utagawa Hiroshige Plum Garden at Kameido (Kameido Umeyashiki).jpeg"
+ },
+ {
+  "id": "cherry",
+  "title": "Cherry Blossoms",
+  "theme": "spring",
+  "artist": "Utagawa Hiroshige",
+  "year": "c. 1835",
+  "file": "File:京都名所之内 あらし山満花-Cherry Blossoms at Arashiyama, from the series Famous Places of Kyōto MET DP120462.jpg"
+ },
+ {
+  "id": "sunflowers",
+  "title": "Sunflowers",
+  "theme": "summer",
+  "artist": "Vincent van Gogh",
+  "year": "1888",
+  "file": "File:Vincent van Gogh - Sunflowers (1888, National Gallery London).jpg"
+ },
+ {
+  "id": "bathers",
+  "title": "Bathers at Asnières",
+  "theme": "summer",
+  "artist": "Georges Seurat",
+  "year": "1883",
+  "file": "File:Georges Seurat - Study for Bathers at Asnières PC 91.jpg"
+ },
+ {
+  "id": "beach",
+  "title": "On the Beach",
+  "theme": "summer",
+  "artist": "Joaquín Sorolla",
+  "year": "1910",
+  "file": "File:Joaquín Sorolla - Chicos en la playa.jpg"
+ },
+ {
+  "id": "harvesters",
+  "title": "The Harvesters",
+  "theme": "autumn",
+  "artist": "Pieter Bruegel the Elder",
+  "year": "1565",
+  "file": "File:Pieter Bruegel the Elder- The Harvesters - Google Art Project.jpg"
+ },
+ {
+  "id": "maples",
+  "title": "Maple Leaves at Mama",
+  "theme": "autumn",
+  "artist": "Utagawa Hiroshige",
+  "year": "1857",
+  "file": "File:Utagawa Hiroshige - The maple leaves of Mama, Tekona shrine and Tsugi bridge - Google Art Project.jpg"
+ },
+ {
+  "id": "poplars",
+  "title": "Poplars",
+  "theme": "autumn",
+  "artist": "Vincent van Gogh",
+  "year": "1884",
+  "file": "File:Populierenlaan in de herfst - s0141M1977 - Van Gogh Museum.jpg"
+ },
+ {
+  "id": "typewriter",
+  "title": "Remington No. 1",
+  "theme": "tech",
+  "artist": "photo by Daderot",
+  "year": "1873",
+  "file": "File:Remington No. 1 typewriter, made by Remington & Songs, Ilion, NY, 1873-1878, the first Sholes & Glidden model typewriter made by Remington - Wisconsin Historical Museum - DSC02806.JPG"
+ },
+ {
+  "id": "eniac",
+  "title": "ENIAC",
+  "theme": "tech",
+  "artist": "U.S. Army",
+  "year": "c. 1946",
+  "file": "File:ARL ENIAC 05.png"
+ },
+ {
+  "id": "rocket",
+  "title": "Stephenson's Rocket",
+  "theme": "tech",
+  "artist": "anonymous",
+  "year": "1829",
+  "file": "File:WP Rocket S&DR.jpg"
+ },
+ {
+  "id": "telescope",
+  "title": "The Great Refractor",
+  "theme": "tech",
+  "artist": "Lick Observatory",
+  "year": "1888",
+  "file": "File:The 36 inch refractor of the Lick observatory.png"
+ },
+ {
+  "id": "lamp",
+  "title": "Edison's Lamp",
+  "theme": "tech",
+  "artist": "Thomas Edison, patent drawing",
+  "year": "c. 1880",
+  "file": "File:Light bulb Edison 2.jpg"
+ },
+ {
+  "id": "thea",
+  "title": "Tea Plant",
+  "theme": "coffee",
+  "artist": "Franz Eugen Köhler",
+  "year": "1887",
+  "file": "File:Camellia sinensis - Köhler–s Medizinal-Pflanzen-025.jpg"
+ },
+ {
+  "id": "coffee-mill",
+  "title": "The Coffee Mill",
+  "theme": "coffee",
+  "artist": "Juan Gris",
+  "year": "1916",
+  "file": "File:The Coffee Mill by Juan Gris, 1916, Cleveland Museum of Art.JPG"
+ }
+]

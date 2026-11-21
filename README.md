@@ -1,13 +1,22 @@
 # ASCII Art for TRMNL
 
-A new ASCII art piece every 15 minutes, set in a monospace font and scaled to fill the screen. Every piece is
-hand-made for this plugin. There are also generated mountain ridges, night skies, mazes and ripple patterns, drawn
-fresh for each slot.
+A new ASCII art piece every 15 minutes, set in a monospace font and scaled to fill the screen. There are three
+collections, and any mix of them can be picked:
+
+- **Classic**: 140 hand-drawn pieces by ASCII artists such as Joan G. Stark (jgs), lgbeard, Normand Veilleux and
+  Susie Oviatt, from the [ASCII Art Archive](https://www.asciiart.eu). Each one keeps its signature and is credited
+  by name in the caption.
+- **Gallery**: public-domain artworks redrawn in ASCII characters. They include Hokusai's Great Wave,
+  Dürer's Rhinoceros, Haeckel's jellyfish, Van Gogh, Hiroshige and Audubon's birds.
+- **Sketches**: hand-drawn pieces made for this plugin, plus generated mountain ridges, night skies, mazes and ripple
+  patterns, drawn fresh for each slot.
 
 > **Set the plugin's refresh interval in TRMNL to 15 minutes.** The piece changes every 15 minutes either way, but
 > the device only shows the change when it refreshes. A longer interval skips pieces.
 
-- **73 hand-made pieces** across nature, space, animals, city, coffee & tea, retro tech, mountains & Alps, the sea
+- **Gallery pieces** come with their artist and year in the caption. Every source image is public domain or CC0 on
+  Wikimedia Commons, and each file in `src/gallery/` links to its source.
+- **73 hand-made sketches** across nature, space, animals, city, coffee & tea, retro tech, mountains & Alps, the sea
   and patterns, plus seasonal sets: winter, Christmas & Advent, spring, summer and autumn
 - **4 generators**: ridgeline, night sky, maze and interference ripples. They are seeded by the 15-minute slot, so
   each slot draws a new picture. The picture is drawn on a canvas shaped like the layout it lands in.
@@ -22,9 +31,10 @@ fresh for each slot.
 
 ## Settings
 
-The settings page (`/manage`) has three options. Without saving anything, you get everything with seasonal weighting
-and the caption shown.
+The settings page (`/manage`) has four options. Without saving anything, you get all three collections with
+seasonal weighting and the caption shown.
 
+- **Collections**: any mix of *classic*, *gallery* and *sketches*. Nothing ticked means all three.
 - **Themes**: any mix of the nine themes and "Seasonal sets". Nothing ticked means everything.
 - **Seasons**: *in season* (default) or *all year* (seasonal pieces as often as any other, whatever the date)
 - **Caption**: show or hide the title and countdown below the art
@@ -37,6 +47,14 @@ Each piece becomes an SVG whose `viewBox` is the piece's character grid: `cols �
 column and stretched to its exact width (`textLength`). Whitespace is therefore preserved exactly, and columns line
 up even if the renderer falls back to a font with other proportions. Small pieces get a minimum grid so they are not
 blown up to poster size. All text is HTML-escaped, including `{` and `}`, so no piece can produce Liquid tags.
+
+Gallery pieces are stored at several widths (28 to 108 columns). Each layout shows the widest drawing that fits its
+box (`src/gallery/layout.json`), with a separate pick for portrait screens. A quadrant therefore gets a coarser
+drawing, not a shrunken copy of the full-screen one.
+
+Hand-drawn pieces can't be redrawn smaller. When one would end up with text under 6 px in a layout (a big piece in a
+quadrant, say), that layout shows the next piece of the rotation that fits instead, picked separately for landscape
+and portrait (`src/fit.js`). Full screens always show the slot's own piece.
 
 There is no upstream service: the art ships with the plugin, so `/markup` answers in milliseconds and cannot be
 held up by a slow API.
@@ -53,6 +71,30 @@ Pieces live in `src/art/*.txt`:
 Themes: `nature space animals city coffee tech mountains sea abstract` and the seasonal `winter christmas spring summer
 autumn`. Use printable ASCII only, with no tabs and no trailing whitespace. Pieces may be up to 80 × 40 characters.
 `npm test` checks all of this. `npm run preview -- --sheet` renders every piece onto contact sheets for review.
+
+### The gallery
+
+`scripts/gallery/catalog.json` lists each artwork: id, title, theme, artist, year and its Wikimedia Commons file. It
+can also hold conversion options: `crop`, `invert`, `paper`, `gamma`, `ink`, `sharpen`, `equalize` and `cutoff`.
+To build:
+
+```bash
+uv run scripts/gallery/build.py                  # everything (downloads are cached in scripts/gallery/.cache)
+uv run scripts/gallery/build.py great-wave owl   # just these
+uv run scripts/gallery/build.py owl --sheet      # plus review sheets in preview/gallery/
+```
+
+The build checks each file's licence on Commons and refuses anything that is not public domain or CC0. The conversion
+matches glyph shapes rather than mapping brightness. The image is cut into character-sized cells, and each cell gets
+the printable ASCII character whose rendered shape is closest. Edges come out as `/ \ | _ ( )`, much as a person would
+draw them, and flat areas come out as tone. Only the build needs Python. The server just reads the text files.
+
+### The classic collection
+
+`scripts/classic/fetch.py` gathers candidates from the archive's categories, `scripts/classic/filter.py` drops what
+won't work: non-ASCII, mostly lettering, too small, or over 80 × 40. `scripts/classic/picks.json` lists the chosen
+pieces per theme, and `scripts/classic/build.py` writes them to `src/classic/<theme>.txt` with a `by:` and a
+`source:` line each. `uv run scripts/classic/sheets.py THEME` renders review sheets of the candidates.
 
 ## Development
 
@@ -82,4 +124,11 @@ settings to `data/`, which the deploy script creates.
 
 ## License
 
-MIT
+The code is MIT. The art is not all ours:
+
+- `src/classic/`: every piece belongs to its artist, who is named in its `by:` line. Signatures are kept as drawn.
+  These pieces come from the ASCII Art Archive, which asks that names and initials stay on the art. The alt.ascii-art
+  FAQ asks for permission before reuse, so if you are an artist and want a piece removed or credited differently,
+  open an issue.
+- `src/gallery/`: ASCII renderings of public-domain or CC0 images from Wikimedia Commons. Each file links its source.
+- `src/art/` and the generators: made for this plugin, MIT like the code.

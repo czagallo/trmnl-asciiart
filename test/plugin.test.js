@@ -9,10 +9,16 @@ const sched = require('../src/schedule');
 const { buildView } = require('../src/view');
 const { renderAll, esc, artSvg, runs, minutesLeft, SIZES, forLayout } = require('../src/markup');
 const { createStore } = require('../src/store');
+const { parseGalleryFile, validateGalleryPiece, variantFor, loadGallery, LAYOUT } = require('../src/gallery');
+const { parseClassicFile, loadClassic } = require('../src/classic');
 
 const MIN = 60e3;
 const SLOT = sched.SLOT_MS;
 const pieces = loadCollection();
+const gallery = loadGallery();
+const classic = loadClassic();
+const SK = { collections: ['sketches'] };
+const GA = { collections: ['gallery'] };
 const NOV = Date.UTC(2026, 10, 19, 12, 0);
 const DEC = Date.UTC(2026, 11, 10, 12, 0);
 const JUL = Date.UTC(2026, 6, 10, 12, 0);
@@ -134,7 +140,8 @@ function walk(settings, now, n) {
 }
 
 test('consecutive slots never repeat a piece, also across cycle boundaries and in every setting', () => {
-  const configs = [null, { seasonal: false }, { themes: ['coffee'] }, { themes: ['seasonal'] }, { themes: ['abstract', 'seasonal'] }, { themes: ['space', 'sea'] }];
+  const base = [null, { seasonal: false }, { themes: ['coffee'] }, { themes: ['seasonal'] }, { themes: ['abstract', 'seasonal'] }, { themes: ['space', 'sea'] }];
+  const configs = [...base, ...base.map((c) => ({ ...c, ...SK })), ...base.map((c) => ({ ...c, ...GA })), { collections: ['classic'], themes: ['coffee'] }];
   for (const cfg of configs) {
     for (const now of [NOV, DEC, JUL]) {
       const size = sched.playlist(cfg, { month: new Date(now).getUTCMonth() + 1, southern: false }).ids.length;
@@ -146,12 +153,15 @@ test('consecutive slots never repeat a piece, also across cycle boundaries and i
 
 test('the whole collection is shown before anything repeats', () => {
   const cal = { month: 11, southern: false };
-  const { ids } = sched.playlist({ seasonal: false }, cal);
+  const { ids } = sched.playlist({ seasonal: false, ...SK }, cal);
   const n = ids.length;
   assert.equal(new Set(ids).size, n, 'without weighting every piece is in the playlist once');
   assert.equal(n, pieces.length + GENERATORS.length);
+  assert.equal(sched.playlist({ seasonal: false, ...GA }, cal).ids.length, gallery.length);
+  assert.equal(sched.playlist({ seasonal: false, collections: ['classic'] }, cal).ids.length, classic.length);
+  assert.equal(sched.playlist({ seasonal: false }, cal).ids.length, classic.length + gallery.length + n, 'the default is all three');
   // With weighting on (November = autumn), every eligible piece still comes up in every single cycle.
-  const weighted = sched.playlist(null, cal).ids;
+  const weighted = sched.playlist(SK, cal).ids;
   for (const c of [0, 1, 77]) assert.equal(new Set(sched.cycleOrder(weighted, c)).size, new Set(weighted).size);
   const cycle = 4321;
   const order = sched.cycleOrder(ids, cycle);
@@ -186,26 +196,34 @@ test('seasonal weighting: in season twice, out of season never; off means once, 
   const count = (ids, theme) => ids.filter((id) => pieces.find((p) => p.id === id)?.theme === theme).length;
   const nChristmas = pieces.filter((p) => p.theme === 'christmas').length;
   const nSummer = pieces.filter((p) => p.theme === 'summer').length;
-  const dec = sched.playlist(null, { month: 12, southern: false }).ids;
+  const dec = sched.playlist(SK, { month: 12, southern: false }).ids;
   assert.equal(count(dec, 'christmas'), nChristmas * sched.SEASON_WEIGHT);
   assert.equal(count(dec, 'winter'), pieces.filter((p) => p.theme === 'winter').length * sched.SEASON_WEIGHT);
   assert.equal(count(dec, 'summer'), 0);
-  const jul = sched.playlist(null, { month: 7, southern: false }).ids;
+  const jul = sched.playlist(SK, { month: 7, southern: false }).ids;
   assert.equal(count(jul, 'christmas'), 0);
   assert.equal(count(jul, 'summer'), nSummer * sched.SEASON_WEIGHT);
-  const off = sched.playlist({ seasonal: false }, { month: 7, southern: false }).ids;
+  const off = sched.playlist({ seasonal: false, ...SK }, { month: 7, southern: false }).ids;
   assert.equal(count(off, 'christmas'), nChristmas);
   assert.equal(count(off, 'summer'), nSummer);
   // December really shows Christmas pieces in the rotation.
-  const seen = new Set(walk(null, DEC, dec.length).map((id) => pieces.find((p) => p.id === id)?.theme));
+  const seen = new Set(walk(SK, DEC, dec.length).map((id) => pieces.find((p) => p.id === id)?.theme));
   assert.ok(seen.has('christmas'));
+  // The gallery has its own seasonal sets, weighted the same way.
+  const gdec = sched.playlist(GA, { month: 12, southern: false }).ids;
+  const gcount = (theme) => gdec.filter((id) => gallery.find((p) => p.id === id)?.theme === theme).length;
+  assert.equal(gcount('christmas'), gallery.filter((p) => p.theme === 'christmas').length * sched.SEASON_WEIGHT);
+  assert.equal(gcount('summer'), 0);
 });
 
 test('theme filter keeps only the chosen themes, including their generated pieces', () => {
-  const { ids } = sched.playlist({ themes: ['mountains'] }, { month: 11, southern: false });
+  const { ids } = sched.playlist({ themes: ['mountains'], ...SK }, { month: 11, southern: false });
   assert.ok(ids.includes('gen-ridgeline'));
   for (const id of ids) assert.ok(id.startsWith('gen-') || pieces.find((p) => p.id === id).theme === 'mountains', id);
-  const seasonalOnly = sched.playlist({ themes: ['seasonal'] }, { month: 12, southern: false });
+  const g = sched.playlist({ themes: ['mountains'], ...GA }, { month: 11, southern: false }).ids;
+  assert.ok(g.length >= 3 && !g.includes('gen-ridgeline'), 'generators belong to the sketches');
+  for (const id of g) assert.equal(gallery.find((p) => p.id === id).theme, 'mountains');
+  const seasonalOnly = sched.playlist({ themes: ['seasonal'], ...SK }, { month: 12, southern: false });
   assert.equal(seasonalOnly.fallback, false);
   for (const id of seasonalOnly.ids) assert.ok(SEASONAL[pieces.find((p) => p.id === id).theme], id);
 });
@@ -213,17 +231,22 @@ test('theme filter keeps only the chosen themes, including their generated piece
 test('a filter with nothing in season falls back to the year-round collection instead of an empty screen', () => {
   // Only "seasonal" ticked, but no seasonal set covers... every month has a season, so force it with a fake collection.
   const fake = [{ id: 'x', title: 'X', theme: 'christmas', lines: ['xxxxxxxx'], rows: 1, cols: 8 }, { id: 'y', title: 'Y', theme: 'sea', lines: ['yyyyyyyy'], rows: 1, cols: 8 }];
-  const r = sched.playlist({ themes: ['seasonal'] }, { month: 7, southern: false }, fake);
+  const r = sched.playlist({ themes: ['seasonal'], ...SK }, { month: 7, southern: false }, fake);
   assert.equal(r.fallback, true);
   assert.ok(r.ids.includes('y') && !r.ids.includes('x'));
-  const v = buildView({ themes: ['seasonal'] }, { now: JUL, pieces: fake });
+  const v = buildView({ themes: ['seasonal'], ...SK }, { now: JUL, pieces: fake });
   assert.equal(v.state, 'ok');
   assert.equal(v.fallback, true);
 });
 
 test('settings are normalised: unknown themes dropped, empty or complete filter means everything', () => {
-  assert.deepEqual(sched.normalizeSettings(null), { themes: null, seasonal: true, caption: true });
-  assert.deepEqual(sched.normalizeSettings({ themes: ['sea', 'pirates'], seasonal: false, caption: false }), { themes: ['sea'], seasonal: false, caption: false });
+  assert.deepEqual(sched.normalizeSettings(null), { themes: null, seasonal: true, caption: true, collections: null });
+  assert.deepEqual(sched.normalizeSettings({ themes: ['sea', 'pirates'], seasonal: false, caption: false, collections: ['classic', 'museum'] }), { themes: ['sea'], seasonal: false, caption: false, collections: ['classic'] });
+  assert.equal(sched.normalizeSettings({ collections: [] }).collections, null);
+  assert.equal(sched.normalizeSettings({ collections: ['gallery', 'sketches', 'classic'] }).collections, null);
+  // settings saved by the single-choice version
+  assert.deepEqual(sched.normalizeSettings({ collection: 'both' }).collections, ['gallery', 'sketches']);
+  assert.deepEqual(sched.normalizeSettings({ collection: 'sketches' }).collections, ['sketches']);
   assert.equal(sched.normalizeSettings({ themes: [] }).themes, null);
   assert.equal(sched.normalizeSettings({ themes: sched.FILTER_KEYS }).themes, null);
   assert.equal(sched.normalizeSettings({ seasonal: 'yes' }).seasonal, true);
@@ -240,7 +263,7 @@ function assertSafe(out, name) {
   assert.deepEqual(Object.keys(out).sort(), [...LAYOUT_KEYS].sort(), name);
   for (const k of LAYOUT_KEYS) {
     assert.match(out[k], new RegExp(VIEW_CLASS[k]), `${name} ${k}`);
-    assert.match(out[k], /class="title_bar"/, `${name} ${k}`);
+    assert.match(out[k], /class="title_bar[" ]/, `${name} ${k}`);
     assert.match(out[k], /icon\.svg/, `${name} ${k}`);
     assert.doesNotMatch(out[k], /\{\{|\{%/, `${name} ${k} contains Liquid delimiters`);
     // Outside <style> (CSS needs single braces) no brace may appear unescaped: art and titles are escaped.
@@ -253,6 +276,100 @@ test('every hand-made piece renders Liquid-safe in every layout', () => {
   for (const p of pieces) {
     const v = { state: 'ok', piece: p, theme: 'T', msLeft: 5 * MIN, caption: true };
     assertSafe(renderAll(v, { baseUrl: 'https://x.example' }), p.title);
+  }
+});
+
+test('the classic collection has credited pieces in every theme and season', () => {
+  assert.ok(classic.length >= 120, `only ${classic.length} classic pieces`);
+  for (const t of [...Object.keys(THEMES), ...Object.keys(SEASONAL)]) assert.ok(classic.filter((p) => p.theme === t).length >= 5, `theme ${t}`);
+  assert.equal(new Set(classic.map((p) => p.id)).size, classic.length, 'ids are unique');
+  assert.equal(new Set(classic.map((p) => p.lines.join('\n'))).size, classic.length, 'no piece twice');
+  for (const p of classic) {
+    assert.ok(p.by && p.by.length > 2, p.id);
+    assert.match(p.source, /^https:\/\/www\.asciiart\.eu\//, p.id);
+  }
+  const [p] = parseClassicFile('=== Cup | coffee\nby: jgs\nsource: https://www.asciiart.eu/x\n  ( )\n  |_|  jgs\n', 'coffee.txt');
+  assert.deepEqual([p.id, p.by, p.lines, p.cols, p.rows], ['classic-coffee-1', 'jgs', ['  ( )', '  |_|  jgs'], 10, 2]);
+});
+
+test('layouts too small for a piece show the next piece of the rotation that fits, per orientation', () => {
+  const { fits, boxes } = require('../src/fit');
+  const big = classic.slice().sort((a, b) => b.cols * b.rows - a.cols * a.rows)[0];
+  assert.ok(fits(big, LAYOUT.boxes.full.wide), 'the full screen keeps the big piece');
+  assert.ok(!fits(big, LAYOUT.boxes.quadrant.wide), 'a quadrant is too small for it');
+  assert.ok(fits(gallery[0], LAYOUT.boxes.quadrant.tall) && fits(generatePiece(GENERATORS[0], 1), LAYOUT.boxes.quadrant.tall));
+  // Every slot over a few days: each layout's piece fits its box, and the full layout keeps the slot's piece.
+  for (let i = 0; i < 300; i++) {
+    const v = buildView({ collections: ['classic'] }, { now: NOV + i * SLOT });
+    for (const [view, orient, box] of boxes()) {
+      const p = (v.fit[view] && v.fit[view][orient]) || v.piece;
+      assert.ok(fits(p, box), `${v.piece.id} ${view} ${orient}`);
+    }
+    assert.ok(!v.fit.full || !v.fit.full.wide || !fits(v.piece, LAYOUT.boxes.full.wide));
+  }
+  // The markup carries both pieces when they differ, switched by .screen--portrait.
+  const v = { state: 'ok', piece: big, theme: 'T', msLeft: MIN, caption: true, fit: { quadrant: { wide: classic.find((p) => fits(p, LAYOUT.boxes.quadrant.wide)) } } };
+  const out = renderAll(v, { baseUrl: 'https://x.example' });
+  assert.match(out.markup_quadrant, /asc-o-wide[\s\S]*asc-o-tall/);
+  assert.doesNotMatch(out.markup, /asc-o-wide"/);
+});
+
+test('every classic piece renders Liquid-safe in every layout, credited in the caption', () => {
+  for (const p of classic) {
+    const out = renderAll({ state: 'ok', piece: p, theme: 'T', msLeft: 5 * MIN, caption: true }, { baseUrl: 'https://x.example' });
+    assertSafe(out, p.id);
+    assert.match(out.markup, /class="asc-by"><span class="asc-sep">&nbsp;&middot; <\/span>/);
+  }
+});
+
+test('the gallery has credited public-domain pieces across every theme and season', () => {
+  assert.ok(gallery.length >= 25, `only ${gallery.length} gallery pieces`);
+  const files = fs.readdirSync(path.join(__dirname, '../src/gallery')).filter((f) => f.endsWith('.txt'));
+  assert.equal(gallery.length, files.length, 'every gallery file is valid');
+  for (const p of gallery) {
+    assert.match(p.source, /^https:\/\/commons\.wikimedia\.org\/wiki\/File:/, p.id);
+    assert.match(p.license, /^(Public domain|CC0)/, p.id);
+    assert.ok(p.by.length > 2, p.id);
+  }
+});
+
+test('gallery files parse into exact drawings, and validation catches bad ones', () => {
+  const text = '=== T | sea\nby: A, 1900\nsource: https://commons.wikimedia.org/wiki/File:X.jpg\nlicense: CC0\n--- 4x3\n /\\\n\n_\n--- 6x4\n  /\\\n /  \\\n\n______\n';
+  const p = parseGalleryFile(text, 't.txt');
+  assert.deepEqual(p.variants.map((v) => [v.cols, v.rows]), [[4, 3], [6, 4]]);
+  assert.deepEqual(p.variants[0].lines, [' /\\', '', '_'], 'blank lines inside a drawing are kept');
+  assert.deepEqual([p.cols, p.rows, p.by], [6, 4, 'A, 1900']);
+  assert.deepEqual(validateGalleryPiece(p), []);
+  const bad = parseGalleryFile(text.replace('CC0', 'CC BY-SA 4.0').replace(' /\\\n\n_', ' /\\ \n\n_____'), 'b.txt');
+  const errs = validateGalleryPiece(bad).join('\n');
+  assert.match(errs, /licence/);
+  assert.match(errs, /trailing whitespace/);
+  assert.match(errs, /line 3 is 5 wide/);
+});
+
+test('every layout gets the widest gallery drawing that fits its box, wide and tall', () => {
+  for (const p of gallery) {
+    for (const [view, box] of Object.entries(LAYOUT.boxes)) {
+      for (const b of Object.values(box)) {
+        const v = variantFor(p, b);
+        assert.ok(v === p.variants[0] || (v.cols <= b.cols && v.rows <= b.rows), `${p.id} ${view}`);
+        // Nothing wider would have fitted too: the builder made every needed width.
+        const next = LAYOUT.widths.find((w) => w > v.cols);
+        if (next && v !== p.variants[0]) {
+          const rows = Math.round((next * v.rows) / v.cols);
+          assert.ok(next > b.cols || rows > b.rows || !p.variants.some((x) => x.cols === next) === false, `${p.id} ${view}`);
+        }
+      }
+    }
+  }
+});
+
+test('every gallery piece renders Liquid-safe in every layout, with credits in the caption', () => {
+  for (const p of gallery) {
+    const out = renderAll({ state: 'ok', piece: p, theme: 'T', msLeft: 5 * MIN, caption: true }, { baseUrl: 'https://x.example' });
+    assertSafe(out, p.id);
+    assert.match(out.markup, /class="asc-by"><span class="asc-sep">&nbsp;&middot; <\/span>/);
+    for (const k of LAYOUT_KEYS) assert.ok((out[k].match(/<svg /g) || []).length <= 2, `${p.id} ${k}`);
   }
 });
 
@@ -319,10 +436,11 @@ test('error states render a clear message in every layout', () => {
     assertSafe(out, JSON.stringify(v));
     assert.match(out.markup, /class="title text--center"/);
   }
-  const empty = buildView(null, { now: NOV, pieces: [] });
+  const empty = buildView(SK, { now: NOV, pieces: [] });
   assert.equal(empty.state, 'ok', 'generated pieces still fill an empty collection');
-  const noCoffee = buildView({ themes: ['coffee'] }, { now: NOV, pieces: [] });
+  const noCoffee = buildView({ themes: ['coffee'], ...SK }, { now: NOV, pieces: [] });
   assert.deepEqual([noCoffee.state, noCoffee.fallback], ['ok', true]);
+  assert.deepEqual(buildView(GA, { now: NOV, pieces: [] }), { state: 'error', error: 'empty' }, 'an empty gallery is a message, not a crash');
   const broken = buildView(null, { now: NOV, pieces: { [Symbol.iterator]() { throw new Error('boom'); } } });
   assert.deepEqual(broken, { state: 'error', error: 'internal' });
   assertSafe(renderAll(broken, { baseUrl: 'https://x.example' }), 'broken');
@@ -356,19 +474,27 @@ test('server: health, markup with defaults and per-user settings, settings page 
   try {
     const health = await (await fetch(`${base}/health`)).json();
     assert.equal(health.status, 'ok');
-    assert.equal(health.pieces, pieces.length);
+    assert.deepEqual([health.classic, health.gallery, health.sketches], [classic.length, gallery.length, pieces.length]);
 
     const form = (o) => new URLSearchParams(o).toString();
     const post = (p, body) => fetch(`${base}${p}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
     const m = await (await post('/markup', form({ 'trmnl[user][time_zone_iana]': 'Europe/Vienna' }))).json();
     assertSafe(m, 'default markup');
+    // The trmnl object may also arrive as one JSON string.
+    const js = await (await post('/markup', form({ trmnl: JSON.stringify({ plugin_settings: { instance_name: 'Hall' }, user: { time_zone_iana: 'Europe/Vienna' } }) }))).json();
+    assert.match(js.markup, />Hall</);
+    assertSafe(await (await post('/markup', form({ trmnl: '{not json' }))).json(), 'bad json');
 
     assert.equal((await fetch(`${base}/manage`)).status, 400);
     const page = await (await fetch(`${base}/manage?uuid=abc-123`)).text();
     assert.match(page, /name="themes" value="coffee" checked/);
     assert.match(page, /15 minutes/);
+    for (const c of ['classic', 'gallery', 'sketches']) assert.match(page, new RegExp(`name="collections" value="${c}" checked`));
 
-    const saved = await (await post('/manage/save', 'uuid=abc-123&themes=coffee&seasonal=off')).text();
+    const saved = await (await post('/manage/save', 'uuid=abc-123&themes=coffee&seasonal=off&collections=sketches&collections=classic')).text();
+    assert.match(saved, /name="collections" value="sketches" checked/);
+    assert.match(saved, /name="collections" value="classic" checked/);
+    assert.doesNotMatch(saved, /name="collections" value="gallery" checked/);
     assert.match(saved, /Saved: Coffee &amp; tea/);
     assert.match(saved, /name="themes" value="coffee" checked/);
     assert.doesNotMatch(saved, /value="sea" checked/);

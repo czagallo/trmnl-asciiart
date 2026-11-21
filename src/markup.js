@@ -12,6 +12,8 @@
 // width (textLength), so columns line up even if the renderer falls back to a font with other proportions.
 
 const { GENERATORS, generatePiece } = require('./generate');
+const { variantFor, LAYOUT } = require('./gallery');
+const { THEMES, SEASONAL } = require('./art');
 
 const CELL_W = 6;
 const CELL_H = 12;
@@ -30,6 +32,15 @@ const STYLE = `<style>
 .screen--portrait .asc-art .asc-wide{display:none}
 .screen--portrait .asc-art .asc-tall{display:block}
 .screen--portrait .view--half_vertical .asc-long,.screen--portrait .view--quadrant .asc-long{display:none}
+.view--quadrant .asc-by,.view--half_vertical .asc-by,.screen--portrait .view--half_horizontal .asc-by{display:none}
+/* TRMNL X quadrant: room for the credit, on a line of its own so long credits stay readable. */
+.screen--lg .view--quadrant .asc-by{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.screen--lg .view--quadrant .asc-sep{display:none}
+.screen--lg .view--quadrant .asc-title{display:block}
+.screen--lg .view--quadrant .asc-cap{align-items:flex-end}
+.asc-o-tall{display:none !important}
+.screen--portrait .asc-o-wide{display:none !important}
+.screen--portrait .asc-o-tall{display:flex !important}
 </style>`;
 
 function esc(s) {
@@ -81,22 +92,27 @@ function artSvg(piece, { minCols = 0, minRows = 0, label } = {}) {
 // Pieces
 // ---------------------------------------------------------------------------
 
-function titleBar(ctx, v) {
-  const instance = ctx.instance || (v && v.theme) || 'Every 15 minutes';
-  return `<div class="title_bar">
+// cls: extra class (the landscape/portrait switch); piece: the piece shown, whose theme names the instance.
+function titleBar(ctx, v, piece, cls = '') {
+  const theme = piece && piece !== (v && v.piece) ? THEMES[piece.theme] || SEASONAL[piece.theme] : v && v.theme;
+  const instance = ctx.instance || theme || 'Every 15 minutes';
+  return `<div class="title_bar${cls}">
 <img class="image" src="${esc(ctx.baseUrl)}/icon.svg" alt="">
 <span class="title">ASCII Art</span>
 <span class="instance">${esc(instance)}</span>
 </div>`;
 }
 
-function caption(v, size) {
+function caption(v, size, piece = v.piece) {
   if (!v.caption) return '';
-  const cls = size === 'small' ? 'label label--small lg:label' : 'label lg:label--large';
+  // TRMNL X gets bigger type, and X held upright the biggest. The quadrant is the same size on X in either
+  // orientation, so it skips the portrait step (and shows the artist, which OG has no room for).
+  const cls = size === 'small' ? 'label label--small lg:label--large' : 'label lg:label--large lg:portrait:label--xlarge';
   // Narrow portrait boxes drop "next in" (CSS) so the title keeps its room.
   const next = `<span class="asc-long">next in&nbsp;</span>${minutesLeft(v.msLeft)}m`;
+  const by = piece.by ? `<span class="asc-by"><span class="asc-sep">&nbsp;&middot; </span>${esc(piece.by)}</span>` : '';
   return `<div class="asc-cap">
-<span class="asc-title ${cls}">${esc(v.piece.title)}</span>
+<span class="asc-title ${cls}">${esc(piece.title)}${by}</span>
 <span class="asc-next ${cls}">${next}</span>
 </div>`;
 }
@@ -118,21 +134,40 @@ function forLayout(piece, size) {
   return gen ? generatePiece(gen, piece.seed, size) : piece;
 }
 
-function art(piece, s) {
+// Gallery pieces come in several widths: each screen orientation gets the widest one that fits its box.
+function galleryArt(piece, view) {
+  const box = LAYOUT.boxes[view];
+  const wide = variantFor(piece, box.wide);
+  const tall = variantFor(piece, box.tall);
+  const svg = (v) => artSvg({ ...piece, ...v });
+  if (wide === tall) return svg(wide);
+  return svg(wide).replace('<svg ', '<svg class="asc-wide" ') + svg(tall).replace('<svg ', '<svg class="asc-tall" ');
+}
+
+function art(piece, s, view) {
+  if (piece.variants) return galleryArt(piece, view);
   if (!piece.generated) return artSvg(piece, s);
   const wide = artSvg(forLayout(piece, s.gen), s).replace('<svg ', '<svg class="asc-wide" ');
   const tall = artSvg(forLayout(piece, s.genTall), s).replace('<svg ', '<svg class="asc-tall" ');
   return wide + tall;
 }
 
+// v.fit[view] holds a smaller piece for a box the slot's piece would be illegible in (see src/view.js). When
+// landscape and portrait need different pieces, both are rendered and CSS shows the one for the screen.
 function layout(view, v, ctx) {
   const s = SIZES[view];
+  const wide = (v.fit && v.fit[view] && v.fit[view].wide) || v.piece;
+  const tall = (v.fit && v.fit[view] && v.fit[view].tall) || v.piece;
+  const body = (p, cls) => `<div class="layout layout--col${cls}" style="gap:${s.gap}px;align-items:stretch;justify-content:stretch">
+<div class="asc-art">${art(p, s, view)}</div>
+${caption(v, s.cap, p)}
+</div>`;
+  const inner =
+    wide === tall
+      ? `${body(wide, '')}\n${titleBar(ctx, v, wide)}`
+      : `${body(wide, ' asc-o-wide')}\n${body(tall, ' asc-o-tall')}\n${titleBar(ctx, v, wide, ' asc-o-wide')}\n${titleBar(ctx, v, tall, ' asc-o-tall')}`;
   return `<div class="view view--${view}">${STYLE}
-<div class="layout layout--col" style="gap:${s.gap}px;align-items:stretch;justify-content:stretch">
-<div class="asc-art">${art(v.piece, s)}</div>
-${caption(v, s.cap)}
-</div>
-${titleBar(ctx, v)}
+${inner}
 </div>`;
 }
 

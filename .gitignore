@@ -10,3 +10,6 @@ CLAUDE.md
 
 # server-specific setup (host, user, paths) stays local
 deployment/private/
+scripts/gallery/.cache/
+scripts/classic/.cache/
+__pycache__/
